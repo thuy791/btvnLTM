@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <string.h>
+#include <winsock2.h>
+
+#pragma comment(lib, "ws2_32")
+
+typedef struct {
+    char name[30];
+    int logic_drive;
+    int sectors;
+    int bytes;
+    int freec;
+    int totalc;
+}INFO;
+
+int main(int argc, char* argv[])
+{
+    WSADATA wsa;
+    WSAStartup(MAKEWORD(2, 2), &wsa);
+
+    SOCKET listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+    SOCKADDR_IN addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = htons((unsigned short)strtoul(argv[1], NULL, 0));
+
+    bind(listener, (SOCKADDR*)&addr, sizeof(addr));
+    listen(listener, 5);
+
+    printf("Waitting for the connection...\n");
+    SOCKET client = accept(listener, NULL, NULL);
+    printf("Successfull connection: %d\n", client);
+
+    INFO info;
+    recv(client, (char*)&info, sizeof(info), 0);
+
+    printf("Name of device: %s\n", info.name);
+    printf("Sectors number: %d\n", info.sectors);
+    printf("Byte number: %d\n", info.bytes);
+    printf("Total of C: %d\n", info.totalc);
+    printf("Rest of C: %d\n", info.freec);
+
+    closesocket(client);
+    closesocket(listener);
+    WSACleanup();
+}
